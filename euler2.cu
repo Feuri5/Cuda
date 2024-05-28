@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <math.h> // Include for log function
-#include <cuda.h> // Include for CUDA API
+#include <math.h>
+#include <cuda.h>
 
 #define N 1000000 // Reduced for practical execution
 #define BLOCK_SIZE 256
@@ -40,27 +40,45 @@ float eulersequential(int n)
 
 int main()
 {
+    // Sequential computation
     clock_t t1, t2;
     t1 = clock();
     float g = eulersequential(N);
     t2 = clock();
-    double global_time = ((double)(t2 - t1)) / CLOCKS_PER_SEC; 
-    printf("Approximation of Resulted Gamma = %lf\n", g);
+    double global_time = ((double)(t2 - t1)) / CLOCKS_PER_SEC;
+    printf("Approximation of Resulted Gamma (CPU) = %lf\n", g);
     printf("Time for this (in ms) = %lf\n", global_time * 1000);
 
+    // GPU computation
     float g2 = 0.0f;
     float *d_g2;
     cudaMalloc((void**)&d_g2, sizeof(float));
     cudaMemcpy(d_g2, &g2, sizeof(float), cudaMemcpyHostToDevice);
 
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
+
     int numBlocks = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     eulerp<<<numBlocks, BLOCK_SIZE>>>(d_g2, N);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
 
     cudaMemcpy(&g2, d_g2, sizeof(float), cudaMemcpyDeviceToHost);
     cudaFree(d_g2);
 
     g2 -= log(N);
+
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+    cudaEventDestroy(start);
+    cudaEventDestroy(stop);
+
     printf("Approximation of Resulted Gamma (GPU) = %lf\n", g2);
+    printf("Time for this (in ms) = %lf\n", milliseconds);
 
     return 0;
 }
