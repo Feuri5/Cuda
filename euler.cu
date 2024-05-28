@@ -22,7 +22,7 @@ __global__ void eulerp(float* f)
 {
 	__shared__ float div[N];
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
-	div[index] = 1.0/index;
+	div[index - 1] = 1.0/index;
 	 __syncthreads();
 	 float gamma = 0;
 	 for(int i = 0; i < N; i++)

@@ -4,8 +4,8 @@
 #include <math.h>
 #include <cuda.h>
 
-#define N 1000000 // Reduced for practical execution
-#define BLOCK_SIZE 256
+#define N 5000000 // Reduced for practical execution
+#define BLOCK_SIZE 8
 
 __global__ void eulerp(float* f, int n)
 {
